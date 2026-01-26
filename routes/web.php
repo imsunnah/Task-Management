@@ -6,20 +6,20 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-
-// --- Public Routes ---
-Route::get('/', fn() => view('welcome'));
-
-// --- Authentication ---
+// --- Authentication (Keep these outside groups for clarity) ---
 Route::controller(LoginController::class)->group(function () {
+    // Change this to /login so the 'login' name matches the URL
     Route::get('/login', 'showLoginForm')->name('login')->middleware('guest');
     Route::post('/login', 'login')->middleware('guest');
     Route::post('/logout', 'logout')->name('logout')->middleware('auth');
 });
 
-// --- Protected Routes (Authenticated Users) ---
-Route::middleware(['auth'])->group(function () {
+// Redirect root to login
+Route::get('/', function () {
+    return redirect()->route('login');
+});
 
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
 
     // Calendar Routes
@@ -32,7 +32,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tasks', TaskController::class);
     Route::resource('events', EventController::class);
 
-    // --- Admin Only Routes ---
+    // Admin Only
     Route::middleware(['admin'])->group(function () {
         Route::resource('users', UserController::class);
     });
