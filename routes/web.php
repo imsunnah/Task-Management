@@ -1,5 +1,4 @@
 <?php
-// routes/web.php
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
@@ -7,41 +6,34 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 
-Route::get('/', function () {
-    return view('welcome');
+// --- Public Routes ---
+Route::get('/', fn() => view('welcome'));
+
+// --- Authentication ---
+Route::controller(LoginController::class)->group(function () {
+    Route::get('/login', 'showLoginForm')->name('login')->middleware('guest');
+    Route::post('/login', 'login')->middleware('guest');
+    Route::post('/logout', 'logout')->name('logout')->middleware('auth');
 });
 
+// --- Protected Routes (Authenticated Users) ---
+Route::middleware(['auth'])->group(function () {
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::middleware('admin')->group(function () {
-    Route::resource('users', UserController::class)->names([
-        'index'   => 'users.index',
-        'create'  => 'users.create',
-        'store'   => 'users.store',
-        'show'    => 'users.show',     // optional
-        'edit'    => 'users.edit',
-        'update'  => 'users.update',
-        'destroy' => 'users.destroy',
-    ]);
-});
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
 
-    // User management (admin only)
+    // Calendar Routes
+    Route::prefix('calendar')->name('calendar.')->group(function () {
+        Route::get('/', [CalendarController::class, 'index'])->name('index');
+        Route::get('/events', [CalendarController::class, 'events'])->name('events');
+    });
 
-    // Tasks
+    // Resource Routes
     Route::resource('tasks', TaskController::class);
-
-    // Events
     Route::resource('events', EventController::class);
 
-    // Calendar
-    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
-    Route::get('/calendar/events', [CalendarController::class, 'events'])->name('calendar.events');
+    // --- Admin Only Routes ---
+    Route::middleware(['admin'])->group(function () {
+        Route::resource('users', UserController::class);
+    });
 });
