@@ -18,6 +18,11 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('calendar.*') ? 'active' : '' }}" href="{{ route('calendar.index') }}">Calendar</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                        <i class="fas fa-users"></i> User Management
+                    </a>
+                </li>
             </ul>
             <div class="d-flex align-items-center">
                 <span class="text-white me-3 d-none d-md-block">Hi, {{ auth()->user()->name }}</span>

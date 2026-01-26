@@ -1,5 +1,5 @@
 <?php
-
+// app/Models/Task.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,16 +9,26 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
-    protected $casts = ['due_datetime' => 'datetime'];
+    protected $fillable = [
+        'title',
+        'description',
+        'assigned_to',
+        'status',
+        'priority',
+        'due_datetime',
+    ];
+
+    protected $casts = [
+        'due_datetime' => 'datetime',
+    ];
 
     public function assignedTo()
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    public function event()
+    public function events()
     {
-        return $this->hasOne(Event::class);
+        return $this->hasMany(Event::class);
     }
 }

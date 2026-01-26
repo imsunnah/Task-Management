@@ -3,29 +3,53 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\Request;
 
 class CalendarController extends Controller
 {
     public function index()
     {
-        // Eager load task to avoid N+1 query issues
-        $query = Event::with('task');
+        return view('calendar.index');
+    }
 
-        if (!Gate::allows('view-all-events')) {
-            $query->where('assigned_to', Auth::id());
+    /**
+     * JSON endpoint for FullCalendar
+     * Called automatically when changing month/week/day or initial load
+     */
+    public function events(Request $request)
+    {
+        $start = $request->query('start'); // YYYY-MM-DD
+        $end   = $request->query('end');   // YYYY-MM-DD
+
+        $query = Event::query()
+            ->whereBetween('date', [$start, $end])
+            ->with(['assignedTo' => fn($q) => $q->select('id', 'name')]);
+
+        // Role-based filtering
+        if (! auth()->user()->isAdmin()) {
+            $query->where('assigned_to', auth()->id());
         }
 
-        $events = $query->get()->map(fn($e) => [
-            'id'    => $e->id,
-            'title' => $e->name . ($e->task ? " — {$e->task->title}" : ''),
-            'start' => $e->date->format('Y-m-d') . 'T' . $e->start_time->format('H:i:s'),
-            'end'   => $e->date->format('Y-m-d') . 'T' . $e->end_time->format('H:i:s'),
-            'url'   => route('events.show', $e->id),
-            'color' => $e->task ? '#3788d8' : '#2c3e50', // Optional: Color code by type
-        ]);
+        $events = $query->get()->map(function (Event $event) {
+            // Combine date + time into ISO8601 format
+            $start = $event->date->format('Y-m-d') . 'T' . $event->start_time->format('H:i:s');
+            $end   = $event->date->format('Y-m-d') . 'T' . $event->end_time->format('H:i:s');
 
-        return view('calendar.index', compact('events'));
+            return [
+                'id'          => $event->id,
+                'title'       => $event->name . ($event->assignedTo ? ' (' . $event->assignedTo->name . ')' : ''),
+                'start'       => $start,
+                'end'         => $end,
+                'allDay'      => false,               // important → shows time
+                'extendedProps' => [
+                    'assigned_to' => $event->assigned_to,
+                    'task_id'     => $event->task_id,
+                ],
+                // Optional: add CSS class for styling
+                'classNames'  => $event->assigned_to === auth()->id() ? ['my-event'] : ['other-event'],
+            ];
+        });
+
+        return response()->json($events);
     }
 }

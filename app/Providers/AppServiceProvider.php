@@ -19,6 +19,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Gate::define('view-all-tasks', function ($user) {
+            return $user->isAdmin();
+        });
+
+        \Illuminate\Support\Facades\Gate::define('view-all-events', function ($user) {
+            return $user->isAdmin();
+        });
+
+        \Illuminate\Support\Facades\Gate::define('is-admin-gate', function ($user) {
+            return $user->isAdmin();
+        });
     }
 }

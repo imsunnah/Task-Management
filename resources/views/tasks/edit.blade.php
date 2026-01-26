@@ -19,8 +19,10 @@
             <div class="mb-3">
                 <label for="assigned_to" class="form-label">Assigned To</label>
                 <select class="form-select" id="assigned_to" name="assigned_to" required>
-                    @foreach ($users as $user)
-                    <option value="{{ $user->id }}" {{ $task->assigned_to == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                    @foreach ($employees as $user) {{-- Changed $users to $employees --}}
+                    <option value="{{ $user->id }}" {{ $task->assigned_to == $user->id ? 'selected' : '' }}>
+                        {{ $user->name }}
+                    </option>
                     @endforeach
                 </select>
             </div>

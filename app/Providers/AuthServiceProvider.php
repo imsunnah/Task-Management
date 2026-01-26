@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Event;
 use App\Models\Task;
+use App\Models\User;
 use App\Policies\EventPolicy;
 use App\Policies\TaskPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -12,34 +13,20 @@ use Illuminate\Support\Facades\Gate;
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
-        Task::class => TaskPolicy::class,
+        Task::class  => TaskPolicy::class,
         Event::class => EventPolicy::class,
     ];
 
-    public function boot()
+    public function boot(): void
     {
         $this->registerPolicies();
 
-        // Gates for simple permissions
-        Gate::define('view-all-tasks', function ($user) {
-            return $user->isAdmin();
-        });
-
-        Gate::define('create-task', function ($user) {
-            return $user->isAdmin();
-        });
-
-        Gate::define('view-all-events', function ($user) {
-            return $user->isAdmin();
-        });
-
-        Gate::define('create-event', function ($user) {
-            return $user->isAdmin();
-        });
-
-        // Dashboard access example
-        Gate::define('access-dashboard', function ($user) {
-            return true; // Both roles can access, but content differs
-        });
+        Gate::define('view-all-tasks', fn(User $user) => $user->isAdmin());
+        Gate::define('create-tasks', fn(User $user) => $user->isAdmin());
+        Gate::define('edit-tasks',   fn(User $user) => $user->isAdmin());  // optional – if you want global edit right
+        Gate::define('delete-tasks', fn(User $user) => $user->isAdmin());
+        Gate::define('view-all-events', fn(User $user) => $user->isAdmin());
+        Gate::define('create-events',   fn(User $user) => $user->isAdmin());
+        Gate::define('delete-events',   fn(User $user) => $user->isAdmin());
     }
 }

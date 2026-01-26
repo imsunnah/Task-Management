@@ -1,90 +1,93 @@
 <?php
-
+// app/Http/Controllers/TaskController.php
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
-    use AuthorizesRequests;
+    use AuthorizesRequests; // <--- This must be here
+
+
 
     public function index()
     {
-        if (Gate::allows('view-all-tasks')) {
-            $tasks = Task::all();
-        } else {
-            $tasks = Task::where('assigned_to', Auth::id())->get();
+        $query = Task::with('assignedTo');
+
+        if (! auth()->user()->isAdmin()) {
+            $query->where('assigned_to', auth()->id());
         }
+
+        $tasks = $query->latest()->get();
 
         return view('tasks.index', compact('tasks'));
     }
 
     public function create()
     {
-        Gate::authorize('create-task');
+        $this->authorize('create', Task::class);   // ← uses policy create()
 
-        $users = \App\Models\User::where('role', 'employee')->get(); // For assignment
-        return view('tasks.create', compact('users'));
+        $employees = User::where('role', 'employee')->get();
+        return view('tasks.create', compact('employees'));
     }
 
     public function store(Request $request)
     {
-        Gate::authorize('create-task');
+        $this->authorize('create', Task::class);
 
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'assigned_to' => 'required|exists:users,id',
+            'assigned_to' => 'required|exists:users,id,role,employee',
             'status' => 'required|in:pending,in_progress,completed',
             'priority' => 'required|in:low,medium,high',
-            'due_datetime' => 'required|date',
+            'due_datetime' => 'nullable|date',
         ]);
 
-        Task::create($request->all());
+        Task::create($validated);
 
         return redirect()->route('tasks.index')->with('success', 'Task created successfully.');
     }
 
     public function show(Task $task)
     {
-        $this->authorize('view', $task);
+        $this->authorize('view', $task);   // ← policy view()
         return view('tasks.show', compact('task'));
     }
 
     public function edit(Task $task)
     {
-        $this->authorize('update', $task);
-
-        $users = \App\Models\User::where('role', 'employee')->get();
-        return view('tasks.edit', compact('task', 'users'));
+        $this->authorize('update', $task);   // ← policy update()
+        $employees = User::where('role', 'employee')->get();
+        return view('tasks.edit', compact('task', 'employees'));
     }
 
     public function update(Request $request, Task $task)
     {
         $this->authorize('update', $task);
 
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'assigned_to' => 'required|exists:users,id',
+            'assigned_to' => 'required|exists:users,id,role,employee',
             'status' => 'required|in:pending,in_progress,completed',
             'priority' => 'required|in:low,medium,high',
-            'due_datetime' => 'required|date',
+            'due_datetime' => 'nullable|date',
         ]);
 
-        $task->update($request->all());
+        $task->update($validated);
 
         return redirect()->route('tasks.index')->with('success', 'Task updated successfully.');
     }
 
     public function destroy(Task $task)
     {
-        $this->authorize('delete', $task);
+        $this->authorize('delete', $task);   // ← policy delete()
         $task->delete();
-        return redirect()->route('tasks.index')->with('success', 'Task deleted successfully.');
+        return redirect()->route('tasks.index');
     }
 }

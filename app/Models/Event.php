@@ -1,5 +1,5 @@
 <?php
-
+// app/Models/Event.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,8 +9,20 @@ class Event extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'date',
+        'start_time',
+        'end_time',
+        'task_id',
+        'assigned_to',
+    ];
 
+    protected $casts = [
+        'date' => 'date',
+        'start_time' => 'datetime:H:i',
+        'end_time' => 'datetime:H:i',
+    ];
 
     public function task()
     {
@@ -21,9 +33,4 @@ class Event extends Model
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
-    protected $casts = [
-        'date'       => 'date',
-        'start_time' => 'datetime',
-        'end_time'   => 'datetime',
-    ];
 }
