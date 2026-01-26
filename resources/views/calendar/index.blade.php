@@ -17,6 +17,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
+
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth'
             , headerToolbar: {
@@ -24,18 +25,19 @@
                 , center: 'title'
                 , right: 'dayGridMonth,timeGridWeek,timeGridDay'
             }
-            , events: {
-                !!$calendarEvents - > toJson() !!
-            }
+            , events: @json($calendarEvents)
             , eventTimeFormat: {
                 hour: '2-digit'
                 , minute: '2-digit'
                 , hour12: false
             }
-            , editable: false, // View only
+            , editable: false
         });
+
         calendar.render();
     });
 
 </script>
+
+
 @endsection

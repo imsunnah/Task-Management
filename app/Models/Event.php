@@ -9,14 +9,8 @@ class Event extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'date',
-        'start_time',
-        'end_time',
-        'task_id',
-        'assigned_to',
-    ];
+    protected $guarded = [];
+
 
     public function task()
     {
