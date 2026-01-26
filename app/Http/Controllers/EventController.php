@@ -48,21 +48,21 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        $this->authorize('view', $event);
+        Gate::authorize('view', $event);
+
         return view('events.show', compact('event'));
     }
 
     public function edit(Event $event)
     {
-        $this->authorize('update', $event);
-
+        Gate::authorize('update', $event);
         $tasks = \App\Models\Task::all();
         return view('events.edit', compact('event', 'tasks'));
     }
 
     public function update(Request $request, Event $event)
     {
-        $this->authorize('update', $event);
+        Gate::authorize('update', $event);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -80,7 +80,8 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
-        $this->authorize('delete', $event);
+        Gate::authorize('delete', $event);
+
         $event->delete();
         return redirect()->route('events.index')->with('success', 'Event deleted successfully.');
     }

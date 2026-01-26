@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -11,23 +10,22 @@ class CalendarController extends Controller
 {
     public function index()
     {
-        // Fetch events based on role
-        if (Gate::allows('view-all-events')) {
-            $events = Event::all();
-        } else {
-            $events = Event::where('assigned_to', Auth::id())->get();
+        // Eager load task to avoid N+1 query issues
+        $query = Event::with('task');
+
+        if (!Gate::allows('view-all-events')) {
+            $query->where('assigned_to', Auth::id());
         }
 
-        // Prepare events for FullCalendar JSON
-        $calendarEvents = $events->map(function ($event) {
-            return [
-                'title' => $event->name,
-                'start' => $event->date . 'T' . $event->start_time,
-                'end' => $event->date . 'T' . $event->end_time,
-                'url' => route('events.show', $event->id),
-            ];
-        });
+        $events = $query->get()->map(fn($e) => [
+            'id'    => $e->id,
+            'title' => $e->name . ($e->task ? " — {$e->task->title}" : ''),
+            'start' => $e->date->format('Y-m-d') . 'T' . $e->start_time->format('H:i:s'),
+            'end'   => $e->date->format('Y-m-d') . 'T' . $e->end_time->format('H:i:s'),
+            'url'   => route('events.show', $e->id),
+            'color' => $e->task ? '#3788d8' : '#2c3e50', // Optional: Color code by type
+        ]);
 
-        return view('calendar.index', compact('calendarEvents'));
+        return view('calendar.index', compact('events'));
     }
 }

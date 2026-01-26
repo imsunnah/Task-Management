@@ -21,4 +21,9 @@ class Event extends Model
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
+    protected $casts = [
+        'date'       => 'date',
+        'start_time' => 'datetime',
+        'end_time'   => 'datetime',
+    ];
 }

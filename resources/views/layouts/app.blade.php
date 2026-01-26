@@ -7,66 +7,52 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
         }
 
         .navbar {
-            background-color: #007bff;
+            background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .navbar-brand,
         .nav-link {
-            color: white !important;
+            font-weight: 500;
+            transition: opacity 0.2s;
         }
 
-        .container {
-            max-width: 1200px;
-            margin-top: 20px;
+        .nav-link:hover {
+            opacity: 0.8;
         }
 
         .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-primary {
-            background-color: #007bff;
             border: none;
+            border-radius: 12px;
+            transition: transform 0.2s;
         }
 
-        .btn-primary:hover {
-            background-color: #0056b3;
+        .dashboard-stats .card:hover {
+            transform: translateY(-5px);
         }
 
     </style>
+    @yield('styles')
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ route('dashboard') }}">Task Planner</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="{{ route('tasks.index') }}">Tasks</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('events.index') }}">Events</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('calendar.index') }}">Calendar</a></li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="nav-link btn btn-link">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    {{-- Smart Inclusion: Only shows for logged-in users --}}
+    @auth
+    @include('layouts.partials.navbar')
+    @endauth
 
-    <div class="container">
+    <div class="container mt-4">
+        {{-- Flash Messages for Success/Error --}}
+        @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
+
         @yield('content')
     </div>
 
