@@ -28,5 +28,8 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('view-all-events', fn(User $user) => $user->isAdmin());
         Gate::define('create-events',   fn(User $user) => $user->isAdmin());
         Gate::define('delete-events',   fn(User $user) => $user->isAdmin());
+        Gate::define('manage-users', function ($user) {
+            return $user->isAdmin();
+        });
     }
 }

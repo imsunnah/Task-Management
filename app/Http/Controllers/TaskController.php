@@ -6,11 +6,10 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
-    use AuthorizesRequests; // <--- This must be here
+    use AuthorizesRequests;
 
 
 
@@ -65,6 +64,8 @@ class TaskController extends Controller
         $employees = User::where('role', 'employee')->get();
         return view('tasks.edit', compact('task', 'employees'));
     }
+
+
 
     public function update(Request $request, Task $task)
     {

@@ -18,11 +18,12 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('calendar.*') ? 'active' : '' }}" href="{{ route('calendar.index') }}">Calendar</a>
                 </li>
+                <!-- in your layout (navbar) -->
+                @if (auth()->check() && auth()->user()->isAdmin())
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
-                        <i class="fas fa-users"></i> User Management
-                    </a>
+                    <a class="nav-link" href="{{ route('users.index') }}">Users</a>
                 </li>
+                @endif
             </ul>
             <div class="d-flex align-items-center">
                 <span class="text-white me-3 d-none d-md-block">Hi, {{ auth()->user()->name }}</span>

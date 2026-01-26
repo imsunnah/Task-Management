@@ -50,20 +50,10 @@ class TaskPolicy
      */
     public function update(User $user, Task $task): bool
     {
-        // Admin can update any task
-        if ($user->isAdmin()) {
-            return true;
-        }
-
-        // Employee can only update tasks assigned to them
-        return $task->assigned_to === $user->id;
+        // Only admin can edit — full stop
+        return $user->isAdmin();
     }
 
-    /**
-     * Determine whether the user can delete a task.
-     *
-     * Only admins should delete tasks.
-     */
     public function delete(User $user, Task $task): bool
     {
         return $user->isAdmin();
