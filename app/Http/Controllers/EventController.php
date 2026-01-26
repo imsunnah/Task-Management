@@ -1,103 +1,138 @@
 <?php
-// app/Http/Controllers/EventController.php
+
 namespace App\Http\Controllers;
 
-use App\Models\Event;
-use App\Models\Task;
-use App\Models\User;
-use Illuminate\Http\Request;
+use App\Models\{Event, Task, User};
+use App\Http\Requests\StoreEventRequest;
+use Illuminate\Support\Facades\{Log, DB};
+use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class EventController extends Controller
 {
-    use AuthorizesRequests; // <--- This must be here
+    use AuthorizesRequests;
     public function index()
     {
-        $query = Event::with(['assignedTo', 'task']);
+        try {
+            $events = Event::with(['assignedTo', 'task'])
+                ->when(!auth()->user()->isAdmin(), function ($query) {
+                    return $query->where('assigned_to', auth()->id());
+                })
+                ->latest()
+                ->paginate(15); // Better than get() for performance
 
-        if (! auth()->user()->isAdmin()) {
-            $query->where('assigned_to', auth()->id());
+            return view('events.index', compact('events'));
+        } catch (Exception $e) {
+            Log::error("Failed to fetch events: " . $e->getMessage());
+            return back()->withErrors('Could not load events at this time.');
         }
-
-        $events = $query->latest()->get();
-
-        return view('events.index', compact('events'));
     }
-
-
+    /**
+     * Show the form for creating a new event.
+     */
     public function create()
     {
-        $this->authorize('create', Event::class);   // uses policy → only admin
+        // 1. Check if the user is authorized (usually Admin only)
+        $this->authorize('create', Event::class);
 
-        $employees = User::where('role', 'employee')->get();
-        $tasks = Task::all();   // or filter if needed
+        try {
+            // 2. Fetch data needed for the smart dropdowns
+            $employees = \App\Models\User::where('role', 'employee')->get();
+            $tasks = \App\Models\Task::all();
 
-        return view('events.create', compact('employees', 'tasks'));
+            // 3. Return your smart blade view
+            return view('events.create', compact('employees', 'tasks'));
+        } catch (\Exception $e) {
+            \Log::error("Failed to load event creation form: " . $e->getMessage());
+            return redirect()->route('events.index')
+                ->withErrors('Unable to open the event creator right now.');
+        }
     }
-
-
-    public function store(Request $request)
+    public function store(StoreEventRequest $request)
     {
         $this->authorize('create', Event::class);
 
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255',
-            'date'       => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time'   => 'required|date_format:H:i|after:start_time',
-            'task_id'    => 'nullable|exists:tasks,id',
-            'assigned_to' => 'required|exists:users,id',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        Event::create($validated);
+            Event::create($request->validated());
 
-        return redirect()->route('events.index')
-            ->with('success', 'Event created successfully.');
+            DB::commit();
+            return redirect()->route('events.index')
+                ->with('success', 'Event scheduled successfully.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error("Event creation failed: " . $e->getMessage());
+
+            return back()
+                ->withInput()
+                ->withErrors('Something went wrong while saving the event.');
+        }
     }
 
+    public function destroy(Event $event)
+    {
+        $this->authorize('delete', $event);
 
+        try {
+            $event->delete();
+            return redirect()->route('events.index')
+                ->with('success', 'Event removed.');
+        } catch (Exception $e) {
+            Log::error("Event deletion failed: " . $e->getMessage());
+            return back()->withErrors('Task could not be deleted.');
+        }
+    }
+    /**
+     * Display the specified event.
+     */
     public function show(Event $event)
     {
         $this->authorize('view', $event);
-        return view('events.show', compact('event'));
-    }
 
+        try {
+            $event->load(['assignedTo', 'task']);
+            return view('events.show', compact('event'));
+        } catch (\Exception $e) {
+            \Log::error("Failed to view event: " . $e->getMessage());
+            return redirect()->route('events.index')
+                ->withErrors('The event details could not be retrieved.');
+        }
+    }
 
     public function edit(Event $event)
     {
         $this->authorize('update', $event);
 
-        $employees = User::where('role', 'employee')->get();
-        $tasks = Task::all();
+        // Fetch data needed for the dropdowns
+        $employees = \App\Models\User::where('role', 'employee')->get();
+        $tasks = \App\Models\Task::all();
 
         return view('events.edit', compact('event', 'employees', 'tasks'));
     }
 
-
-    public function update(Request $request, Event $event)
+    /**
+     * Update the specified event in storage.
+     */
+    public function update(\App\Http\Requests\StoreEventRequest $request, Event $event)
     {
         $this->authorize('update', $event);
 
-        $validated = $request->validate([
-            // same rules as in store
-        ]);
+        try {
+            \DB::beginTransaction();
 
-        $event->update($validated);
+            $event->update($request->validated());
 
-        return redirect()->route('events.index')
-            ->with('success', 'Event updated successfully.');
-    }
+            \DB::commit();
+            return redirect()->route('events.index')
+                ->with('success', 'Event updated successfully.');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error("Event update failed: " . $e->getMessage());
 
-
-    public function destroy(Event $event)
-    {
-        $this->authorize('delete', $event);   // only admin
-
-        $event->delete();
-
-        return redirect()->route('events.index')
-            ->with('success', 'Event deleted successfully.');
+            return back()
+                ->withInput()
+                ->withErrors('Something went wrong while updating the event.');
+        }
     }
 }

@@ -1,6 +1,25 @@
 @extends('layouts.app')
 
 @section('content')
+@if($errors->any())
+<div class="fixed top-4 right-4 z-[100] animate-bounce">
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-xl">
+        <div class="flex items-center">
+            <div class="text-red-700 font-bold text-sm">
+                @foreach($errors->all() as $error)
+                <p>⚠️ {{ $error }}</p>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+@if(session('success'))
+<div class="fixed top-4 right-4 z-[100] bg-emerald-500 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold animate-pulse">
+    ✅ {{ session('success') }}
+</div>
+@endif
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4>Events</h4>
