@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -9,25 +10,22 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        //
-    }
+    public function register(): void {}
 
     /**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
-        \Illuminate\Support\Facades\Gate::define('view-all-tasks', function ($user) {
+        Gate::define('view-all-tasks', function ($user) {
             return $user->isAdmin();
         });
 
-        \Illuminate\Support\Facades\Gate::define('view-all-events', function ($user) {
+        Gate::define('view-all-events', function ($user) {
             return $user->isAdmin();
         });
 
-        \Illuminate\Support\Facades\Gate::define('is-admin-gate', function ($user) {
+        Gate::define('is-admin-gate', function ($user) {
             return $user->isAdmin();
         });
     }

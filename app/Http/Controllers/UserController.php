@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -19,64 +22,87 @@ class UserController extends Controller
         return view('users.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255|unique:users',
-            'password' => 'required|min:8|confirmed',
-        ]);
+        try {
+            DB::transaction(function () use ($request) {
 
-        $validated['password'] = Hash::make($validated['password']);
-        $validated['role']     = 'employee';
+                User::create([
+                    'name'     => $request->name,
+                    'email'    => $request->email,
+                    'password' => Hash::make($request->password),
+                    'role'     => 'employee',
+                ]);
+            });
 
-        User::create($validated);
+            return redirect()->route('users.index')
+                ->with('success', 'Employee created successfully.');
+        } catch (\Throwable $e) {
 
-        return redirect()->route('users.index')
-            ->with('success', 'Employee created successfully.');
+            Log::error('User creation failed', [
+                'payload' => $request->validated(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors('Could not create employee account.');
+        }
     }
 
     public function edit(User $user)
     {
-        // Optional: extra protection layer (good practice)
-        if ($user->isAdmin()) {
-            abort(403, 'Administrator accounts cannot be edited here.');
-        }
-
         return view('users.edit', compact('user'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        if ($user->isAdmin()) {
-            abort(403, 'Administrator accounts cannot be edited here.');
+        try {
+            DB::transaction(function () use ($request, $user) {
+
+                $data = $request->validated();
+
+                if (empty($data['password'])) {
+                    unset($data['password']);
+                } else {
+                    $data['password'] = Hash::make($data['password']);
+                }
+
+                $user->update($data);
+            });
+
+            return redirect()->route('users.index')
+                ->with('success', 'Employee updated successfully.');
+        } catch (\Throwable $e) {
+
+            Log::error('User update failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors('Could not update employee details.');
         }
-
-        $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|min:8|confirmed',
-        ]);
-
-        if ($request->filled('password')) {
-            $validated['password'] = Hash::make($validated['password']);
-        }
-
-        $user->update($validated);
-
-        return redirect()->route('users.index')
-            ->with('success', 'Employee updated successfully.');
     }
 
     public function destroy(User $user)
     {
-        if ($user->isAdmin()) {
-            abort(403, 'Cannot delete administrator accounts.');
+        try {
+            $user->delete();
+
+            return redirect()->route('users.index')
+                ->with('success', 'Employee deleted successfully.');
+        } catch (\Throwable $e) {
+
+            Log::error('User deletion failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors(
+                'Employee cannot be deleted. They may be assigned to tasks or events.'
+            );
         }
-
-        $user->delete();
-
-        return redirect()->route('users.index')
-            ->with('success', 'Employee deleted successfully.');
     }
 }

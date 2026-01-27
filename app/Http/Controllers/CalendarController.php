@@ -11,42 +11,31 @@ class CalendarController extends Controller
     {
         return view('calendar.index');
     }
-
-    /**
-     * JSON endpoint for FullCalendar
-     * Called automatically when changing month/week/day or initial load
-     */
     public function events(Request $request)
     {
-        $start = $request->query('start'); // YYYY-MM-DD
-        $end   = $request->query('end');   // YYYY-MM-DD
+        $start = $request->query('start');
+        $end   = $request->query('end');
 
         $query = Event::query()
             ->whereBetween('date', [$start, $end])
             ->with(['assignedTo' => fn($q) => $q->select('id', 'name')]);
 
-        // Role-based filtering
         if (! auth()->user()->isAdmin()) {
             $query->where('assigned_to', auth()->id());
         }
-
         $events = $query->get()->map(function (Event $event) {
-            // Combine date + time into ISO8601 format
-            $start = $event->date->format('Y-m-d') . 'T' . $event->start_time->format('H:i:s');
-            $end   = $event->date->format('Y-m-d') . 'T' . $event->end_time->format('H:i:s');
-
             return [
-                'id'          => $event->id,
-                'title'       => $event->name . ($event->assignedTo ? ' (' . $event->assignedTo->name . ')' : ''),
-                'start'       => $start,
-                'end'         => $end,
-                'allDay'      => false,               // important → shows time
+                'id'    => $event->id,
+                'title' => ($event->assignedTo->name ?? 'Unassigned') . ': ' . $event->name,
+                'start' => $event->date->format('Y-m-d') . 'T' . $event->start_time->format('H:i:s'),
+                'end'   => $event->date->format('Y-m-d') . 'T' . $event->end_time->format('H:i:s'),
+                'backgroundColor' => $event->assigned_to === auth()->id() ? '#0d6efd' : '#f8f9fa',
+                'textColor'       => $event->assigned_to === auth()->id() ? '#fff' : '#212529',
+                'borderColor'     => '#dee2e6',
                 'extendedProps' => [
-                    'assigned_to' => $event->assigned_to,
-                    'task_id'     => $event->task_id,
+                    'description' => $event->name,
+                    'task_title'  => $event->task ? $event->task->title : 'None',
                 ],
-                // Optional: add CSS class for styling
-                'classNames'  => $event->assigned_to === auth()->id() ? ['my-event'] : ['other-event'],
             ];
         });
 
