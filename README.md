@@ -11,7 +11,7 @@ A Laravel application with **Admin** and **Employee** roles implementing secure 
   - Events: `view`, `view_any`, `create`, `update`, `delete`
   - Admin-only: `user.manage`
 - **Default Permissions for New Employees** — Only `task.view` and `event.view` (own items only)
-- **Admin User Management** — Create users + separate permission management page
+- **Admin User Management** — Create users
 - **Task Planner**
   - Title, Description, Assigned Employee, Status, Priority, Due Date & Time
   - Admin assigns tasks · Employees see/manage only their own (if permitted)
@@ -24,9 +24,9 @@ A Laravel application with **Admin** and **Employee** roles implementing secure 
 
 ## Tech Stack
 
-- **Framework**: Laravel 11.x
-- **Authentication**: Laravel Breeze (Blade)
-- **Authorization**: Laravel Gates & Policies + [Spatie/laravel-permission](https://spatie.be/docs/laravel-permission)
+- **Framework**: Laravel 12.x
+- **Authentication**: Manual Authentication
+- **Authorization**: Laravel Gates & Policies
 - **Frontend**: Bootstrap 5, FullCalendar v6 (CDN)
 - **Database**: MySQL / SQLite (configurable)
 
@@ -37,3 +37,22 @@ A Laravel application with **Admin** and **Employee** roles implementing secure 
 ```bash
 git clone <repository-url>
 cd task-planner
+```bash
+2.Install dependencies
+
+```bash
+composer install****
+
+3.Copy environment file and configure
+
+```bash
+cp .env.example .env
+
+4.Run migrations & seed initial data
+```bash
+php artisan migrate --seed
+
+5.Start development server
+```bash
+php artisan serve
+
