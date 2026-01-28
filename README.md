@@ -1,59 +1,210 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Task Manager & Calendar System (RBAC)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This is a simple but practical **Task Planner and Calendar Management** system built with **Laravel**. The main goal of this project is to demonstrate how **role-based access control (RBAC)** can be implemented using **Laravel Gates, Policies**, and **Spatie Laravel Permission**, without relying on Laravel starter authentication packages.
 
-## About Laravel
+The application has two roles: **Admin** and **Employee**, each with clearly defined permissions and ownership rules.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> **Important:** Authentication is handled manually using Laravel’s default `web` guard. Packages like Breeze, Jetstream, Fortify, or Sanctum are **not used** in this project.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Overview
 
-## Learning Laravel
+* Single-guard authentication (`web`)
+* Admin and Employee roles
+* Permission-based access control
+* Task management with assignment
+* Calendar and event management using FullCalendar
+* Clean UI with permission-aware actions
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+This project is suitable for learning or small internal tools where strict access control is required.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Roles & Access
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Admin
 
-### Premium Partners
+* Full access to the system
+* Can manage users, tasks, and events
+* Can assign tasks and events to employees
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Employee
 
-## Contributing
+* Limited access based on assigned permissions
+* Can only see their **own** tasks and events
+* Cannot access user management
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Ownership checks are enforced through policies to prevent unauthorized access.
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Permissions
 
-## Security Vulnerabilities
+Permissions are managed using **Spatie Laravel Permission**.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Task Permissions
+
+* `task.view` – View own task
+* `task.view_any` – View all tasks (Admin)
+* `task.create`
+* `task.update`
+* `task.delete`
+
+### Event Permissions
+
+* `event.view` – View own events
+* `event.view_any` – View all events (Admin)
+* `event.create`
+* `event.update`
+* `event.delete`
+
+### Admin Only
+
+* `user.manage` – User management access
+
+### Default Employee Permissions
+
+New employees are assigned:
+
+* `task.view`
+* `event.view`
+
+They can only access records assigned to them.
+
+---
+
+## User Management
+
+* Only Admin users with the `user.manage` permission can create new users
+* Roles and permissions are assigned during user creation
+
+---
+
+## Task Planner
+
+### Task Fields
+
+* Title
+* Description
+* Assigned Employee
+* Status (Pending, In Progress, Completed)
+* Priority (Low, Medium, High)
+* Due date and time
+
+### Access Rules
+
+* Admin can create, view, update, and delete all tasks
+* Employees can only view and manage tasks assigned to them (if permitted)
+
+---
+
+## Calendar & Events
+
+The calendar is built using **FullCalendar v6**.
+
+### Features
+
+* Month, week, and day views
+* Click-to-create events
+* Optional task association
+
+### Event Fields
+
+* Event title
+* Event date
+* Start and end time
+* Related task (optional)
+
+### Access Rules
+
+* Admin can see and manage all events
+* Employees only see events assigned to them
+
+---
+
+## User Interface
+
+* Built with Bootstrap 5
+* Blade templates
+* Buttons and actions are shown or hidden based on permissions
+* Unauthorized actions are blocked at controller and policy level
+
+---
+
+## Security
+
+* Authorization handled using Laravel Policies and Gates
+* Ownership checks for Employee actions
+* Permission checks at both route and UI level
+* Prevents direct URL access without permission
+
+---
+
+## Tech Stack
+
+* Laravel 12.x
+* PHP 8+
+* Manual authentication (custom login logic)
+* Spatie Laravel Permission
+* Bootstrap 5
+* FullCalendar v6 (CDN)
+* MySQL or SQLite
+
+---
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd task-planner
+```
+
+### 2. Install dependencies
+
+```bash
+composer install
+```
+
+### 3. Environment setup
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Configure database settings in `.env`.
+
+### 4. Run migrations and seeders
+
+```bash
+php artisan migrate --seed
+```
+
+Seeders will create:
+
+* Roles
+* Permissions
+* A default Admin user
+
+### 5. Start the server
+
+```bash
+php artisan serve
+```
+
+---
+
+## Notes
+
+* This project avoids Laravel authentication scaffolding on purpose
+* Designed to keep authorization logic clear and understandable
+* Useful as a reference for RBAC using a single guard
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open for learning and personal use.
