@@ -1,58 +1,210 @@
-# Task Planner & Calendar with Role-Based Access Control
+# Task Manager & Calendar System (RBAC)
 
-A Laravel application with **Admin** and **Employee** roles implementing secure Role-Based Access Control (RBAC) using **Laravel Gates**, **Policies**, and **Spatie Laravel Permission** package. Includes a full **Task Planner** (CRUD) and **Calendar Event Management** with FullCalendar.js, with strict permission-based visibility and actions.
+This is a simple but practical **Task Planner and Calendar Management** system built with **Laravel**. The main goal of this project is to demonstrate how **role-based access control (RBAC)** can be implemented using **Laravel Gates, Policies**, and **Spatie Laravel Permission**, without relying on Laravel starter authentication packages.
 
-## Features
+The application has two roles: **Admin** and **Employee**, each with clearly defined permissions and ownership rules.
 
-- **Authentication** — Single `web` guard with role-based logic (no multi-guard complexity)
-- **Roles** — Admin (full access) · Employee (restricted by permissions)
-- **Granular Permissions** (via Spatie/laravel-permission)
-  - Tasks: `view`, `view_any`, `create`, `update`, `delete`
-  - Events: `view`, `view_any`, `create`, `update`, `delete`
-  - Admin-only: `user.manage`
-- **Default Permissions for New Employees** — Only `task.view` and `event.view` (own items only)
-- **Admin User Management** — Create users
-- **Task Planner**
-  - Title, Description, Assigned Employee, Status, Priority, Due Date & Time
-  - Admin assigns tasks · Employees see/manage only their own (if permitted)
-- **Calendar & Events**
-  - FullCalendar.js (month/week/day views)
-  - Event name, date, start/end time, optional related task
-  - Admin sees all events · Employees see only their assigned events
-- **UI** — Clean Bootstrap + Blade templates, permission-aware buttons (hide edit/delete when not allowed)
-- **Security** — Authorization via Policies + ownership checks for employees
+> **Important:** Authentication is handled manually using Laravel’s default `web` guard. Packages like Breeze, Jetstream, Fortify, or Sanctum are **not used** in this project.
+
+---
+
+## Overview
+
+* Single-guard authentication (`web`)
+* Admin and Employee roles
+* Permission-based access control
+* Task management with assignment
+* Calendar and event management using FullCalendar
+* Clean UI with permission-aware actions
+
+This project is suitable for learning or small internal tools where strict access control is required.
+
+---
+
+## Roles & Access
+
+### Admin
+
+* Full access to the system
+* Can manage users, tasks, and events
+* Can assign tasks and events to employees
+
+### Employee
+
+* Limited access based on assigned permissions
+* Can only see their **own** tasks and events
+* Cannot access user management
+
+Ownership checks are enforced through policies to prevent unauthorized access.
+
+---
+
+## Permissions
+
+Permissions are managed using **Spatie Laravel Permission**.
+
+### Task Permissions
+
+* `task.view` – View own task
+* `task.view_any` – View all tasks (Admin)
+* `task.create`
+* `task.update`
+* `task.delete`
+
+### Event Permissions
+
+* `event.view` – View own events
+* `event.view_any` – View all events (Admin)
+* `event.create`
+* `event.update`
+* `event.delete`
+
+### Admin Only
+
+* `user.manage` – User management access
+
+### Default Employee Permissions
+
+New employees are assigned:
+
+* `task.view`
+* `event.view`
+
+They can only access records assigned to them.
+
+---
+
+## User Management
+
+* Only Admin users with the `user.manage` permission can create new users
+* Roles and permissions are assigned during user creation
+
+---
+
+## Task Planner
+
+### Task Fields
+
+* Title
+* Description
+* Assigned Employee
+* Status (Pending, In Progress, Completed)
+* Priority (Low, Medium, High)
+* Due date and time
+
+### Access Rules
+
+* Admin can create, view, update, and delete all tasks
+* Employees can only view and manage tasks assigned to them (if permitted)
+
+---
+
+## Calendar & Events
+
+The calendar is built using **FullCalendar v6**.
+
+### Features
+
+* Month, week, and day views
+* Click-to-create events
+* Optional task association
+
+### Event Fields
+
+* Event title
+* Event date
+* Start and end time
+* Related task (optional)
+
+### Access Rules
+
+* Admin can see and manage all events
+* Employees only see events assigned to them
+
+---
+
+## User Interface
+
+* Built with Bootstrap 5
+* Blade templates
+* Buttons and actions are shown or hidden based on permissions
+* Unauthorized actions are blocked at controller and policy level
+
+---
+
+## Security
+
+* Authorization handled using Laravel Policies and Gates
+* Ownership checks for Employee actions
+* Permission checks at both route and UI level
+* Prevents direct URL access without permission
+
+---
 
 ## Tech Stack
 
-- **Framework**: Laravel 12.x
-- **Authentication**: Manual Authentication
-- **Authorization**: Laravel Gates & Policies
-- **Frontend**: Bootstrap 5, FullCalendar v6 (CDN)
-- **Database**: MySQL / SQLite (configurable)
+* Laravel 12.x
+* PHP 8+
+* Manual authentication (custom login logic)
+* Spatie Laravel Permission
+* Bootstrap 5
+* FullCalendar v6 (CDN)
+* MySQL or SQLite
+
+---
 
 ## Installation
 
-1. Clone the repository
+### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
 cd task-planner
-```bash
-2.Install dependencies
+```
+
+### 2. Install dependencies
 
 ```bash
-composer install****
+composer install
+```
 
-3.Copy environment file and configure
+### 3. Environment setup
 
 ```bash
 cp .env.example .env
+php artisan key:generate
+```
 
-4.Run migrations & seed initial data
+Configure database settings in `.env`.
+
+### 4. Run migrations and seeders
+
 ```bash
 php artisan migrate --seed
+```
 
-5.Start development server
+Seeders will create:
+
+* Roles
+* Permissions
+* A default Admin user
+
+### 5. Start the server
+
 ```bash
 php artisan serve
+```
 
+---
+
+## Notes
+
+* This project avoids Laravel authentication scaffolding on purpose
+* Designed to keep authorization logic clear and understandable
+* Useful as a reference for RBAC using a single guard
+
+---
+
+## License
+
+This project is open for learning and personal use.
