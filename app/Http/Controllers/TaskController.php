@@ -6,7 +6,6 @@ use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Models\Task;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 
@@ -16,44 +15,42 @@ class TaskController extends Controller
 
     public function index()
     {
-        $query = Task::with('assignedTo');
-        if (!auth()->user()->isAdmin()) {
-            $query->where('assigned_to', auth()->id());
-        }
-        $tasks = $query->latest()->get();
+        $tasks = Task::with('assignedTo')
+            ->when(! auth()->user()->isAdmin(), function ($query) {
+                $query->where('assigned_to', auth()->id());
+            })
+            ->latest()
+            ->get();
+
         return view('tasks.index', compact('tasks'));
     }
+
     public function create()
     {
         $this->authorize('create', Task::class);
 
         $employees = User::where('role', 'employee')->get();
+
         return view('tasks.create', compact('employees'));
     }
+
     public function store(StoreTaskRequest $request)
     {
-        try {
-            DB::transaction(function () use ($request) {
-                Task::create($request->validated());
-            });
-            return redirect()->route('tasks.index')
-                ->with('success', 'Task created successfully.');
-        } catch (\Throwable $e) {
-            Log::error('Task creation failed', [
-                'user_id' => auth()->id(),
-                'payload' => $request->validated(),
-                'error' => $e->getMessage(),
-            ]);
+        $this->authorize('create', Task::class);
 
-            return back()
-                ->withInput()
-                ->withErrors('Could not save task. Please try again.');
-        }
+        DB::transaction(function () use ($request) {
+            Task::create($request->validated());
+        });
+
+        return redirect()
+            ->route('tasks.index')
+            ->with('success', 'Task created successfully.');
     }
 
     public function show(Task $task)
     {
         $this->authorize('view', $task);
+
         return view('tasks.show', compact('task'));
     }
 
@@ -62,48 +59,32 @@ class TaskController extends Controller
         $this->authorize('update', $task);
 
         $employees = User::where('role', 'employee')->get();
+
         return view('tasks.edit', compact('task', 'employees'));
     }
 
     public function update(UpdateTaskRequest $request, Task $task)
     {
-        try {
-            DB::transaction(function () use ($request, $task) {
-                $task->update($request->validated());
-            });
+        $this->authorize('update', $task);
 
-            return redirect()->route('tasks.index')
-                ->with('success', 'Task updated successfully.');
-        } catch (\Throwable $e) {
+        DB::transaction(function () use ($request, $task) {
+            $task->update($request->validated());
+        });
 
-            Log::error('Task update failed', [
-                'task_id' => $task->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return back()
-                ->withInput()
-                ->withErrors('Could not update task. Please try again.');
-        }
+        return redirect()
+            ->route('tasks.index')
+            ->with('success', 'Task updated successfully.');
     }
 
     public function destroy(Task $task)
     {
         $this->authorize('delete', $task);
 
-        try {
-            $task->delete();
+        // Events are deleted automatically via DB cascade
+        $task->delete();
 
-            return redirect()->route('tasks.index')
-                ->with('success', 'Task deleted successfully.');
-        } catch (\Throwable $e) {
-
-            Log::error('Task deletion failed', [
-                'task_id' => $task->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return back()->withErrors('Could not delete task.');
-        }
+        return redirect()
+            ->route('tasks.index')
+            ->with('success', 'Task deleted successfully.');
     }
 }

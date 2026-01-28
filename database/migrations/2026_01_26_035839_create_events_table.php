@@ -13,13 +13,22 @@ return new class extends Migration
     {
         Schema::create('events', function (Blueprint $table) {
             $table->id();
+
             $table->string('name');
+
             $table->date('date');
             $table->time('start_time');
             $table->time('end_time');
-            $table->foreignId('task_id')->nullable()->constrained('tasks')->onDelete('set null');
-            $table->foreignId('assigned_to')->constrained('users')->onDelete('cascade');
+            $table->foreignId('task_id')
+                ->nullable()
+                ->constrained('tasks')
+                ->cascadeOnDelete();
+            $table->foreignId('assigned_to')
+                ->constrained('users')
+                ->restrictOnDelete();
             $table->timestamps();
+            $table->index('assigned_to');
+            $table->index('date');
         });
     }
 

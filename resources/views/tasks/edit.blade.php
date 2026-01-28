@@ -111,10 +111,8 @@
 
                             {{-- Footer Actions --}}
                             <div class="col-12 mt-4 pt-3 border-top">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <button type="button" class="btn btn-link text-danger text-decoration-none fw-semibold p-0 shadow-none">
-                                        <i class="bi bi-trash3 me-1"></i> Delete Task
-                                    </button>
+                                <div class="d-flex justify-content-end align-items-center">
+
                                     <div>
                                         <a href="{{ route('tasks.index') }}" class="btn btn-light px-4 rounded-3 me-2">Cancel</a>
                                         <button type="submit" class="btn btn-primary px-5 rounded-3 fw-bold shadow-sm">

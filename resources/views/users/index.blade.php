@@ -7,7 +7,7 @@
     {{-- Page Header --}}
     <div class="row align-items-center mb-5">
         <div class="col-md-6">
-            <h2 class="fw-bold text-dark mb-1">Team Directory</h2>
+            <h2 class="fw-bold text-dark mb-1">Employee List</h2>
             <p class="text-muted mb-0">Manage employee accounts and system access.</p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">
@@ -50,7 +50,6 @@
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark">{{ $user->name }}</div>
-                                    <div class="text-muted small">ID: #00{{ $user->id }}</div>
                                 </div>
                             </div>
                         </td>
